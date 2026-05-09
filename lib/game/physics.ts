@@ -6,9 +6,14 @@ const { Engine, World, Bodies, Body, Events } = Matter;
 
 export function createEngine() {
   const engine = Engine.create({
-    gravity: { x: 0, y: 0.6 }, // Reduced gravity for slower, floatier drops
+    gravity: { x: 0, y: 0.8 }, // Moderate gravity
+    positionIterations: 10, // Higher iterations for smoother collision resolution
+    velocityIterations: 8, // Smoother velocity solving
+    constraintIterations: 4, // Better constraint handling
   });
-  engine.world.gravity.scale = 0.0008; // Lower scale for gentler acceleration
+  engine.world.gravity.scale = 0.0008; // Gentle acceleration scale
+  // Slow down simulation for smoother, more relaxed gameplay
+  engine.timing.timeScale = 0.7;
   return engine;
 }
 
@@ -17,8 +22,9 @@ export function createWalls(dimensions: GameDimensions) {
   
   const options = {
     isStatic: true,
-    friction: 0.4, // Slightly higher friction for smoother contact
-    restitution: 0.05, // Lower bounce off walls
+    friction: 0.3, // Moderate friction on walls
+    frictionStatic: 0.4, // Helps balls settle against walls
+    restitution: 0.1, // Small bounce off walls
     render: { visible: false },
     label: "wall",
   };
@@ -62,11 +68,12 @@ export function createTokenBody(
   const config = getTokenConfig(level);
   
   const body = Bodies.circle(x, y, config.radius, {
-    restitution: 0.4, // Higher bounce for more reactive ball-to-ball collisions
-    friction: 0.2, // Lower friction so balls push each other more
-    frictionAir: 0.04, // High air resistance for slow, floaty drops
-    density: 0.0006 * (1 + level * 0.08), // Lighter so they move more on impact
-    slop: 0.01, // Tighter collision response
+    restitution: 0.35, // Good bounce for reactive ball-to-ball collisions
+    friction: 0.1, // Low friction so balls push each other smoothly
+    frictionStatic: 0.2, // Low static friction for easier movement
+    frictionAir: 0.02, // Moderate air resistance - timeScale handles slow drops
+    density: 0.001 * (1 + level * 0.15), // Balanced density - heavier balls push lighter ones
+    slop: 0.02, // Slightly loose for smoother stacking
     label: "token",
   });
 
