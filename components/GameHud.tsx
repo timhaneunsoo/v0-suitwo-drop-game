@@ -11,20 +11,32 @@ type GameHudProps = {
   onRestart: () => void;
 };
 
-function TokenPreview({ level, size = 48, label }: { level: number; size?: number; label: string }) {
+// Scale factor to convert game radius to HUD preview size
+// Game radius ranges from 18 (L1) to 92 (L8)
+// We want HUD preview to range from ~32px to ~64px
+const MIN_PREVIEW_SIZE = 32;
+const MAX_PREVIEW_SIZE = 64;
+const MIN_RADIUS = 18;
+const MAX_RADIUS = 92;
+
+function TokenPreview({ level, label }: { level: number; label: string }) {
   const config = getTokenConfig(level);
+  
+  // Scale the token's actual radius to a reasonable HUD preview size
+  const normalizedRadius = (config.radius - MIN_RADIUS) / (MAX_RADIUS - MIN_RADIUS);
+  const previewSize = MIN_PREVIEW_SIZE + normalizedRadius * (MAX_PREVIEW_SIZE - MIN_PREVIEW_SIZE);
   
   return (
     <div className="flex flex-col items-center gap-1">
       <span className="text-xs text-muted-foreground uppercase tracking-wider">{label}</span>
       <div
-        className="rounded-full flex items-center justify-center font-bold text-white shadow-lg"
+        className="rounded-full flex items-center justify-center font-bold text-white shadow-lg transition-all duration-200"
         style={{
-          width: size,
-          height: size,
+          width: previewSize,
+          height: previewSize,
           background: `linear-gradient(135deg, ${config.colorA} 0%, ${config.colorB} 100%)`,
           boxShadow: `0 0 20px ${config.colorA}40, inset 0 2px 4px rgba(255,255,255,0.3)`,
-          fontSize: size * 0.35,
+          fontSize: previewSize * 0.35,
         }}
       >
         {config.label}
@@ -57,8 +69,8 @@ export function GameHud({
 
       {/* Token Previews */}
       <div className="flex gap-6 justify-center items-end">
-        <TokenPreview level={currentTokenLevel} size={56} label="Current" />
-        <TokenPreview level={nextTokenLevel} size={40} label="Next" />
+        <TokenPreview level={currentTokenLevel} label="Current" />
+        <TokenPreview level={nextTokenLevel} label="Next" />
       </div>
 
       {/* Drop Indicator */}
