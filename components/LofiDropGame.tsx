@@ -48,6 +48,7 @@ export function LofiDropGame() {
   const mergeHandlerRef = useRef<{ processMergeQueue: () => void } | null>(null);
   const previewXRef = useRef<number>(180);
   const imagesRef = useRef<Map<number, HTMLImageElement>>(new Map());
+  const currentTokenLevelRef = useRef<number>(1);
 
   // React state for UI updates
   const [score, setScore] = useState(0);
@@ -136,7 +137,9 @@ export function LofiDropGame() {
     setGameOver(false);
     setIsNewBest(false);
     setCanDrop(true);
-    setCurrentTokenLevel(getRandomDroppableLevel());
+    const initialLevel = getRandomDroppableLevel();
+    setCurrentTokenLevel(initialLevel);
+    currentTokenLevelRef.current = initialLevel;
     setNextTokenLevel(getRandomDroppableLevel());
     setPreviewX(dims.width / 2);
 
@@ -224,7 +227,9 @@ export function LofiDropGame() {
     // Update state
     lastDropTimeRef.current = now;
     setCanDrop(false);
-    setCurrentTokenLevel(nextTokenLevel);
+    const newCurrentLevel = nextTokenLevel;
+    setCurrentTokenLevel(newCurrentLevel);
+    currentTokenLevelRef.current = newCurrentLevel;
     setNextTokenLevel(getRandomDroppableLevel());
 
     // Re-enable drop after cooldown
@@ -241,7 +246,7 @@ export function LofiDropGame() {
     const rect = canvas.getBoundingClientRect();
     const x = clientX - rect.left;
     const dims = dimensionsRef.current;
-    const config = getTokenConfig(currentTokenLevel);
+    const config = getTokenConfig(currentTokenLevelRef.current);
     
     // Clamp to valid range
     const minX = dims.wallThickness + config.radius;
@@ -250,7 +255,7 @@ export function LofiDropGame() {
 
     previewXRef.current = clampedX;
     setPreviewX(clampedX);
-  }, [currentTokenLevel, gameOver]);
+  }, [gameOver]);
 
   // Check for game over condition
   const checkGameOver = useCallback(() => {
@@ -384,8 +389,8 @@ export function LofiDropGame() {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Draw preview token
-      const config = getTokenConfig(currentTokenLevel);
+      // Draw preview token - use ref for current level to avoid stale closure
+      const config = getTokenConfig(currentTokenLevelRef.current);
       drawToken(ctx, previewXRef.current, dims.dropZoneY, config, 0.7);
     }
 
@@ -411,7 +416,7 @@ export function LofiDropGame() {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-  }, [currentTokenLevel, gameOver, canDrop]);
+  }, [gameOver, canDrop]);
 
   // Draw individual token
   const drawToken = (
