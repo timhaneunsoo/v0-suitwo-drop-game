@@ -6,9 +6,9 @@ const { Engine, World, Bodies, Body, Events } = Matter;
 
 export function createEngine() {
   const engine = Engine.create({
-    gravity: { x: 0, y: 1 },
+    gravity: { x: 0, y: 0.6 }, // Reduced gravity for slower, floatier drops
   });
-  engine.world.gravity.scale = 0.001;
+  engine.world.gravity.scale = 0.0008; // Lower scale for gentler acceleration
   return engine;
 }
 
@@ -17,8 +17,8 @@ export function createWalls(dimensions: GameDimensions) {
   
   const options = {
     isStatic: true,
-    friction: 0.3,
-    restitution: 0.1,
+    friction: 0.4, // Slightly higher friction for smoother contact
+    restitution: 0.05, // Lower bounce off walls
     render: { visible: false },
     label: "wall",
   };
@@ -62,10 +62,10 @@ export function createTokenBody(
   const config = getTokenConfig(level);
   
   const body = Bodies.circle(x, y, config.radius, {
-    restitution: 0.2,
-    friction: 0.5,
-    frictionAir: 0.001,
-    density: 0.001 * (1 + level * 0.1),
+    restitution: 0.1, // Lower bounce for softer collisions
+    friction: 0.6, // Higher friction for smoother rolling
+    frictionAir: 0.015, // Much higher air resistance for floaty, slow drops
+    density: 0.0008 * (1 + level * 0.1), // Slightly lighter for gentler feel
     label: "token",
   });
 
