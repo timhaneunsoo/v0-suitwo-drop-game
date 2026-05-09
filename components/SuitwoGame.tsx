@@ -346,12 +346,37 @@ export function SuitwoGame() {
   const render = useCallback((ctx: CanvasRenderingContext2D) => {
     const dims = dimensionsRef.current;
 
-    // Clear canvas
-    ctx.fillStyle = "#0f172a";
+    // Clear canvas with deep space gradient
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, dims.height);
+    bgGradient.addColorStop(0, "#0c0a1a");
+    bgGradient.addColorStop(0.5, "#120f24");
+    bgGradient.addColorStop(1, "#0a0814");
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, dims.width, dims.height);
 
-    // Draw container background
-    ctx.fillStyle = "#1e293b";
+    // Draw subtle grid pattern
+    ctx.strokeStyle = "rgba(139, 92, 246, 0.03)";
+    ctx.lineWidth = 1;
+    const gridSize = 30;
+    for (let x = dims.wallThickness; x < dims.width - dims.wallThickness; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, dims.dangerLineY);
+      ctx.lineTo(x, dims.height - dims.wallThickness);
+      ctx.stroke();
+    }
+    for (let y = dims.dangerLineY; y < dims.height - dims.wallThickness; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(dims.wallThickness, y);
+      ctx.lineTo(dims.width - dims.wallThickness, y);
+      ctx.stroke();
+    }
+
+    // Draw container background with gradient
+    const containerGradient = ctx.createLinearGradient(0, dims.dangerLineY, 0, dims.height);
+    containerGradient.addColorStop(0, "rgba(139, 92, 246, 0.05)");
+    containerGradient.addColorStop(0.5, "rgba(34, 211, 238, 0.02)");
+    containerGradient.addColorStop(1, "rgba(139, 92, 246, 0.08)");
+    ctx.fillStyle = containerGradient;
     ctx.fillRect(
       dims.wallThickness,
       dims.dangerLineY,
@@ -359,7 +384,9 @@ export function SuitwoGame() {
       dims.height - dims.dangerLineY - dims.wallThickness
     );
 
-    // Draw danger line
+    // Draw danger line with glow
+    ctx.shadowColor = "#ef4444";
+    ctx.shadowBlur = 10;
     ctx.strokeStyle = "#ef444480";
     ctx.lineWidth = 2;
     ctx.setLineDash([8, 8]);
@@ -368,26 +395,54 @@ export function SuitwoGame() {
     ctx.lineTo(dims.width - dims.wallThickness, dims.dangerLineY);
     ctx.stroke();
     ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
 
-    // Draw walls
-    ctx.fillStyle = "#334155";
+    // Draw walls with gradient
+    const wallGradient = ctx.createLinearGradient(0, 0, dims.wallThickness, 0);
+    wallGradient.addColorStop(0, "#1a1530");
+    wallGradient.addColorStop(1, "#251f45");
+    ctx.fillStyle = wallGradient;
     // Left wall
     ctx.fillRect(0, 0, dims.wallThickness, dims.height);
+    
+    const wallGradientRight = ctx.createLinearGradient(dims.width - dims.wallThickness, 0, dims.width, 0);
+    wallGradientRight.addColorStop(0, "#251f45");
+    wallGradientRight.addColorStop(1, "#1a1530");
+    ctx.fillStyle = wallGradientRight;
     // Right wall
     ctx.fillRect(dims.width - dims.wallThickness, 0, dims.wallThickness, dims.height);
+    
     // Floor
+    const floorGradient = ctx.createLinearGradient(0, dims.height - dims.wallThickness, 0, dims.height);
+    floorGradient.addColorStop(0, "#251f45");
+    floorGradient.addColorStop(1, "#1a1530");
+    ctx.fillStyle = floorGradient;
     ctx.fillRect(0, dims.height - dims.wallThickness, dims.width, dims.wallThickness);
+    
+    // Wall edge highlights
+    ctx.strokeStyle = "rgba(139, 92, 246, 0.2)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(dims.wallThickness, dims.dangerLineY);
+    ctx.lineTo(dims.wallThickness, dims.height - dims.wallThickness);
+    ctx.moveTo(dims.width - dims.wallThickness, dims.dangerLineY);
+    ctx.lineTo(dims.width - dims.wallThickness, dims.height - dims.wallThickness);
+    ctx.stroke();
 
     // Draw drop preview line
     if (!gameOver && canDrop) {
-      ctx.strokeStyle = "#ffffff20";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
+      // Glowing preview line
+      ctx.shadowColor = "rgba(139, 92, 246, 0.5)";
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = "rgba(139, 92, 246, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
       ctx.beginPath();
       ctx.moveTo(previewXRef.current, dims.dropZoneY);
       ctx.lineTo(previewXRef.current, dims.dangerLineY);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
 
       // Draw preview token - use ref for current level to avoid stale closure
       const config = getTokenConfig(currentTokenLevelRef.current);
@@ -435,6 +490,15 @@ export function SuitwoGame() {
     // Check for preloaded image
     const image = imagesRef.current.get(config.level);
     if (image && config.imageSrc) {
+      // Draw glow behind image
+      ctx.shadowColor = config.colorA;
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(0, 0, config.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.01)";
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
       // Draw image clipped to circle
       ctx.beginPath();
       ctx.arc(0, 0, config.radius, 0, Math.PI * 2);
@@ -447,6 +511,10 @@ export function SuitwoGame() {
         config.radius * 2
       );
     } else {
+      // Outer glow
+      ctx.shadowColor = config.colorA;
+      ctx.shadowBlur = 20;
+      
       // Draw gradient circle
       const gradient = ctx.createRadialGradient(
         -config.radius * 0.3,
@@ -457,40 +525,53 @@ export function SuitwoGame() {
         config.radius
       );
       gradient.addColorStop(0, config.colorA);
+      gradient.addColorStop(0.7, config.colorB);
       gradient.addColorStop(1, config.colorB);
 
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(0, 0, config.radius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
 
-      // Draw highlight
-      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-      ctx.beginPath();
-      ctx.ellipse(
-        -config.radius * 0.2,
+      // Inner highlight
+      const highlightGradient = ctx.createRadialGradient(
         -config.radius * 0.3,
-        config.radius * 0.4,
-        config.radius * 0.25,
-        -0.5,
+        -config.radius * 0.4,
         0,
-        Math.PI * 2
+        -config.radius * 0.3,
+        -config.radius * 0.4,
+        config.radius * 0.5
       );
+      highlightGradient.addColorStop(0, "rgba(255, 255, 255, 0.35)");
+      highlightGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = highlightGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, config.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Draw border
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+      // Draw border with gradient
+      const borderGradient = ctx.createLinearGradient(-config.radius, -config.radius, config.radius, config.radius);
+      borderGradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
+      borderGradient.addColorStop(0.5, "rgba(255, 255, 255, 0.2)");
+      borderGradient.addColorStop(1, "rgba(255, 255, 255, 0.1)");
+      ctx.strokeStyle = borderGradient;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(0, 0, config.radius - 1, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Draw label
+      // Draw label with shadow
+      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 1;
       ctx.fillStyle = "white";
-      ctx.font = `bold ${config.radius * 0.5}px sans-serif`;
+      ctx.font = `bold ${config.radius * 0.45}px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(config.label, 0, 0);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
     }
 
     ctx.restore();
@@ -566,22 +647,28 @@ export function SuitwoGame() {
       {/* Game Canvas */}
       <div
         ref={containerRef}
-        className="relative bg-card/30 backdrop-blur-sm rounded-2xl p-3 border border-border/50 shadow-2xl"
+        className="relative glass-card rounded-3xl p-4 glow-purple"
       >
+        {/* Decorative corner accents */}
+        <div className="absolute top-2 left-2 w-8 h-8 border-l-2 border-t-2 border-violet-500/30 rounded-tl-xl" />
+        <div className="absolute top-2 right-2 w-8 h-8 border-r-2 border-t-2 border-cyan-500/30 rounded-tr-xl" />
+        <div className="absolute bottom-2 left-2 w-8 h-8 border-l-2 border-b-2 border-cyan-500/30 rounded-bl-xl" />
+        <div className="absolute bottom-2 right-2 w-8 h-8 border-r-2 border-b-2 border-violet-500/30 rounded-br-xl" />
+        
         <canvas
           ref={canvasRef}
-          className="rounded-xl cursor-crosshair touch-none transition-transform"
+          className="rounded-2xl cursor-crosshair touch-none transition-transform"
           style={{ display: "block" }}
         />
         
         {/* Instructions overlay */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-muted-foreground/60 text-center pointer-events-none">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground/50 text-center pointer-events-none font-mono tracking-wider uppercase">
           Move to aim • Click/Tap to drop
         </div>
       </div>
 
       {/* HUD */}
-      <div className="lg:sticky lg:top-4 w-full lg:w-64">
+      <div className="lg:sticky lg:top-4 w-full lg:w-72">
         <GameHud
           score={score}
           bestScore={bestScore}
