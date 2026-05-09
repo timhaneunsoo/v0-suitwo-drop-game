@@ -64,7 +64,7 @@ export function createTokenBody(
   const body = Bodies.circle(x, y, config.radius, {
     restitution: 0.4, // Higher bounce for more reactive ball-to-ball collisions
     friction: 0.2, // Lower friction so balls push each other more
-    frictionAir: 0.012, // Air resistance for floaty drops
+    frictionAir: 0.04, // High air resistance for slow, floaty drops
     density: 0.0006 * (1 + level * 0.08), // Lighter so they move more on impact
     slop: 0.01, // Tighter collision response
     label: "token",
