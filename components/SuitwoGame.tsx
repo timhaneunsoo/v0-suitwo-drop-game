@@ -18,7 +18,7 @@ import {
 } from "@/lib/game/tokenConfig";
 import type { GameToken, Particle, GameDimensions } from "@/lib/game/types";
 
-const STORAGE_KEY = "lofi-drop-best-score";
+const STORAGE_KEY = "suitwo-best-score";
 const DROP_COOLDOWN = 500; // ms
 const DANGER_TIME = 2000; // ms before game over when above danger line
 const GAME_ASPECT_RATIO = 0.6; // width / height
@@ -27,7 +27,7 @@ function generateId() {
   return Math.random().toString(36).substring(2, 9);
 }
 
-export function LofiDropGame() {
+export function SuitwoGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   

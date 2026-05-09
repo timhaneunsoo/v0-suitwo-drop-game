@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Lofi Drop - Cozy Arcade Game',
-  description: 'A relaxing drop-and-merge game. Combine tokens to reach the legendary Lofi Whale!',
+  title: 'Suitwo - Drop & Merge Game',
+  description: 'A fun drop-and-merge puzzle game. Combine tokens to reach the highest level!',
   generator: 'v0.app',
   icons: {
     icon: [

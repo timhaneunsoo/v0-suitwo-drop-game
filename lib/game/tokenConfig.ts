@@ -1,7 +1,7 @@
 import type { TokenConfig } from "./types";
 
 // Token progression from smallest to largest
-// Colors use warm lofi/crypto vibes - teals, purples, golds
+// Colors use warm, vibrant tones for the Suitwo game
 export const TOKEN_CONFIGS: TokenConfig[] = [
   {
     level: 1,
